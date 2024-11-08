@@ -10,6 +10,7 @@
 
 
 const { configure } = require('quasar/wrappers');
+const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 
 module.exports = configure(function (/* ctx */) {
@@ -76,12 +77,35 @@ module.exports = configure(function (/* ctx */) {
             lintCommand: 'eslint "./**/*.{js,mjs,cjs,vue}"'
           }
         }, { server: false }]
-      ]
+      ],
+      extendWebpack(cfg) {
+        cfg.plugins.push(
+          new ModuleFederationPlugin({
+            name: 'fessbook_left_panel',  // Unique name for each micro frontend
+            filename: 'remoteEntry.js',   // Output file for the remote module
+            exposes: {
+              './FessbookLeftPanel': './src/App.vue', // Expose specific components or modules
+            },
+            shared: {
+              vue: {
+                singleton: true,
+                requiredVersion: '^3.0.0',
+              },
+              'quasar': {
+                singleton: true,
+                requiredVersion: '^2.0.0',
+              },
+              // Additional shared libraries
+            },
+          })
+        );
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
       // https: true
+      port: 9001,
       open: true // opens browser window automatically
     },
 
